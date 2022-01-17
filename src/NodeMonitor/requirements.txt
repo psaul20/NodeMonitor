@@ -3,7 +3,7 @@
 # requests
 # base64
 # json
-requests==2.26.0
+requests
 datetime
 # os
 pytz
