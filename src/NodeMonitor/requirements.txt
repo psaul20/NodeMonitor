@@ -8,3 +8,4 @@ datetime
 # os
 pytz
 # pytz.timezone
+google-cloud-storage
