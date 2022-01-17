@@ -96,7 +96,7 @@ def get_PRE_Data(apiKey: str, apiDataName: str) -> dict:
 def save_Data(data, fileName):
     bucketName = os.getenv("STORAGE_BUCKET_NAME")
     
-    with open(f"tmp/{fileName}", 'w') as j:
+    with open(f"/tmp/{fileName}", 'w') as j:
         json.dump(data, j, default=str)
         
     # """Uploads a file to the bucket."""
@@ -104,10 +104,10 @@ def save_Data(data, fileName):
     bucket = storage_client.bucket(bucketName)
     blob = bucket.blob(fileName)
 
-    blob.upload_from_filename(f"tmp/{fileName}")
+    blob.upload_from_filename(f"/tmp/{fileName}")
 
     print("File {} uploaded to {}.".format(
-            f"tmp/{fileName}", fileName
+            f"/tmp/{fileName}", fileName
         )
     )
 
@@ -145,8 +145,8 @@ def check_Storage(fileName: str, hrLimit: float):
     # If uploaded within time limit, download to local in memory storage
     if getBlob == True:
         blob = bucket.blob(fileName)
-        blob.download_to_filename(f"tmp/{fileName}")
-        with open(f'tmp/{fileName}', 'r') as j:
+        blob.download_to_filename(f"/tmp/{fileName}")
+        with open(f'/tmp/{fileName}', 'r') as j:
             storedData = json.load(j)
         
         return storedData

@@ -9,7 +9,7 @@ carriers = {
 }
 
 def send(message):
-        # Replace the number with your own, or consider using an argument\dict for multiple people.
+    # Replace the number with your own, or consider using an argument\dict for multiple people.
 	to_number = '469-323-7220{}'.format(carriers['att'])
 	auth = (os.getenv("PATRICK_GMAIL_USERNAME"), os.getenv("PATRICK_GMAIL_PASSWORD"))
 
@@ -20,3 +20,6 @@ def send(message):
 
 	# Send text message through SMS gateway of destination number
 	server.sendmail( auth[0], to_number, message)
+ 
+if __name__ == "__main__":
+     send("test message")
