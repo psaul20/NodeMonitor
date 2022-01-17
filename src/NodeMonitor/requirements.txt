@@ -1,5 +1,5 @@
 functions-framework==3.*
-logging
+# logging
 requests
 base64
 json
