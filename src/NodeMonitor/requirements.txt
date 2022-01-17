@@ -1,7 +1,7 @@
 functions-framework==3.*
 # logging
 requests
-base64
+# base64
 json
 requests
 datetimeasdt
