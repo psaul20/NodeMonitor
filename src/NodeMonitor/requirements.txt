@@ -5,6 +5,6 @@
 # json
 # requests
 datetime
-os
+# os
 pytz
 pytz.timezone
