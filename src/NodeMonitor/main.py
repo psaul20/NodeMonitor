@@ -58,7 +58,8 @@ def node_monitor(event, context):
                 monitorData['current_token_price_USD'] = 0 # To be incorporated later
                 monitorData['tokens_earned_last_day_USD'] = monitorData['current_token_price_USD'] * monitorData['tokens_earned_last_day']
                 # Send data to message manager
-                return monitorData
+                monitorDataName = f"{apiLabels[0]}_{apiLabels[1]}_Monitor_Data.json"
+                save_Data(monitorData, monitorDataName)
 
 def get_PRE_Data(apiKey: str, apiDataName: str) -> dict:
     # First, check storage to see if API data has been gathered in the last hour (avoids API rate limits)
@@ -96,7 +97,7 @@ def save_Data(data, fileName):
     bucketName = os.getenv("STORAGE_BUCKET_NAME")
     
     with open(f"tmp/{fileName}", 'w') as j:
-        json.dump(data, j)
+        json.dump(data, j, default=str)
         
     # """Uploads a file to the bucket."""
     storage_client = storage.Client()
@@ -128,6 +129,7 @@ def check_Storage(fileName: str, hrLimit: float):
 
     #Check to see if file has been uploaded within the given time limit
     storage_client = storage.Client()
+    bucket = storage_client.bucket(bucketName)
     blobs = storage_client.list_blobs(bucketName)
     
     # Standardize to UTC for comparison
@@ -138,12 +140,14 @@ def check_Storage(fileName: str, hrLimit: float):
         blobtime = blob.updated.astimezone(utcTz)
         if blob.name == fileName and blobtime < now and blobtime > (now - dt.timedelta(hours=hrLimit)):
             getBlob = True
+        
 
     # If uploaded within time limit, download to local in memory storage
     if getBlob == True:
+        blob = bucket.blob(fileName)
         blob.download_to_filename(f"tmp/{fileName}")
         with open(f'tmp/{fileName}', 'r') as j:
-            storedData = json.loads(j.read())
+            storedData = json.load(j)
         
         return storedData
     else:

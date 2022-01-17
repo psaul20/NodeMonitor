@@ -14,7 +14,7 @@ mock_context.resource = {
     'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage',
 }
 
-def test_node_monitor(capsys):
+def test_node_monitor():
     time_trigger = 'daily_5pm'
     encoded_trigger = base64.b64encode(time_trigger.encode('utf-8')).decode('utf-8')
     pubsub_message = {
