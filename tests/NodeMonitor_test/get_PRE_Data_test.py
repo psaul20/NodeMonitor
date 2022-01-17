@@ -4,10 +4,10 @@ import datetime as dt
 from google.cloud import storage
 
 apiDataStruct = {
-    'NodesTotal': None,
-    'NodesOnline' : None,
-    'NodeRequests' : None,
-    'Token Earned Total' : None
+    'nodes_total': None,
+    'nodes_online' : None,
+    'node_requests' : None,
+    'tokens_earned_total' : None
 }
 
 # fileName = "PRE_API_Response_Data.json"
@@ -38,19 +38,24 @@ with open('/Users/patricksaul/Documents/Projects/Python Projects/NodeMonitor/tes
     #  print(responseData)
      
 returnData = apiDataStruct.copy()
-returnData['NodesTotal'] = responseData['nodes_returned']
+returnData['nodes_total'] = responseData['nodes_returned']
 
 #stuck on nested dictionary extraction
 
 nodesOnlineCount = 0
 nodeRequestTotal = 0
 tokenEarnedTotal = 0.0
-returnData['NodesOnline'] = nodesOnlineCount
-for node in responseData['nodes']:
-    if node[1][0] == True and node[1][1] == False:
+
+for node, data in responseData['nodes'].items():
+    print(data)
+    if data['status']['connected'] == True and data['status']['blocked'] == False:
         nodesOnlineCount += 1
-    nodeRequestTotal += node[2][10]
-    tokenEarnedTotal += node[2][16]
+    nodeRequestTotal += data['period']['total_requests']
+    tokenEarnedTotal += data['period']['total_pre_earned']
+
+returnData['nodes_online'] = nodesOnlineCount
+returnData['node_requests'] = nodeRequestTotal
+returnData['tokens_earned_total'] = tokenEarnedTotal
     
 print(returnData)
 

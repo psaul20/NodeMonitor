@@ -4,6 +4,7 @@ import base64
 import json
 import requests
 import datetime as dt
+import os
 from google.cloud import storage
 
 apiDict = {
@@ -11,10 +12,10 @@ apiDict = {
 }
 
 apiDataStruct = {
-    'NodesTotal': None,
-    'NodesOnline' : None,
-    'NodeRequests' : None,
-    'Token Earned Total' : None
+    'nodes_total': None,
+    'nodes_online' : None,
+    'node_requests' : None,
+    'tokens_earned_total' : None
 }
 
 funcDict = {
@@ -53,9 +54,66 @@ def node_monitor(event, context):
                 msgData = funcDict[apiLabels[0]](api_key)
                 check_Diff(msgData)
                 
-                
-        
 def get_PRE_Data(apiKey) -> dict:
+    storedData = check_Storage()
+    if storedData != False:
+        responseData = storedData
+    
+    else:
+        responseData = call_PRE_API(apiKey)
+    
+    returnData = apiDataStruct.copy()
+    returnData['nodes_total'] = responseData['nodes_returned']
+
+    nodesOnlineCount = 0
+    nodeRequestTotal = 0
+    tokenEarnedTotal = 0.0
+
+    for node, data in responseData['nodes'].items():
+        print(data)
+        if data['status']['connected'] == True and data['status']['blocked'] == False:
+            nodesOnlineCount += 1
+        nodeRequestTotal += data['period']['total_requests']
+        tokenEarnedTotal += data['period']['total_pre_earned']
+
+    returnData['nodes_online'] = nodesOnlineCount
+    returnData['node_requests'] = nodeRequestTotal
+    returnData['tokens_earned_total'] = tokenEarnedTotal
+    
+    return returnData
+    
+def save_Data(data, filePath):
+    with open(f'tmp/{fileName}', 'w') as j:
+            storedData = json.dumps(data, j)
+    
+    """Uploads a file to the bucket."""
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(os.getenv(STORAGE_BUCKET_NAME))
+    blob = bucket.blob(destination_blob_name)
+
+    blob.upload_from_filename(source_file_name)
+
+    print(
+        "File {} uploaded to {}.".format(
+            source_file_name, destination_blob_name
+        )
+    )
+    
+    
+def call_PRE_API(apiKey):
+    responseData = call_PRE_API()
+    parameters = {
+            'stats' : 'true'
+        }
+
+    response = requests.get(f"https://nodes.presearch.org/api/nodes/status/{apiKey}",
+            params = parameters)
+    responseData = response.json()
+    
+    returnData = apiDataStruct.copy()
+    returnData['NodesTotal'] = responseData['nodes_returned']
+
+def check_Storage():
     fileName = "PRE_API_Response_Data.json"
     bucketName = "node_monitor_bucket"
     getBlob = False
@@ -63,44 +121,20 @@ def get_PRE_Data(apiKey) -> dict:
     #Check to see if file has been uploaded in the last hour
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucketName)
-    blobs = storage_client.list_blobs(bucket_name)
+    blobs = storage_client.list_blobs(bucketName)
     now = dt.datetime.now()
     for blob in blobs:
-        if blob.name == fileName and blob.updated < dt.datetime.now() and blob.updated > dt.timedelta(hours=1):
+        if blob.name == fileName and blob.updated < now and blob.updated > (now - dt.timedelta(hours=1)):
             getBlob = True
 
     if getBlob == True:
         blob.download_to_filename(f"tmp/{fileName}")
         with open(f'tmp/{fileName}', 'r') as j:
-            responseData = json.loads(j.read())
-            print(responseData)
-        returnData = json.loads()
-
-    else:
-        parameters = {
-                'stats' : 'true'
-            }
-
-        response = requests.get(f"https://nodes.presearch.org/api/nodes/status/LAHNgTM8pJPW3fb8or1F6Kj15zKGc0",
-                params = parameters)
-        responseData = response.json()
+            storedData = json.loads(j.read())
         
-        returnData = apiDataStruct.copy()
-        returnData['NodesTotal'] = responseData['nodes_returned']
-    
-    nodesOnlineCount = 0
-    nodeRequestTotal = 0
-    tokenEarnedTotal = 0.0
-    returnData['NodesOnline'] = nodesOnlineCount
-    for node in responseData['nodes']:
-        if node['meta']['status']['connected'] == "true" and node['meta']['status']['blocked'] == "false":
-            nodesOnlineCount += 1
-        nodeRequestTotal += node['meta']['period']['total_requests']
-        tokenEarnedTotal += node['meta']['period']['total_pre_earned']
-    
-    return returnData
-
-def save_Data(apiData):
+        return storedData
+    else:
+        return False
     
 
 def check_Diff(msgData):
