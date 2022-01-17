@@ -1,4 +1,3 @@
-import logging
 import requests
 import base64
 import json
@@ -44,8 +43,9 @@ def node_monitor(event, context):
     # Returns:
     #     None. The output is written to Cloud Logging.
 
-    logging.log(20, "This Function was triggered by messageId {} published at {} to {}"
+    print("This Function was triggered by messageId {} published at {} to {}"
                 .format(context.event_id, context.timestamp, context.resource["name"]))
+    print(f"Data from message: {str(event['data'])}")
 
     if 'data' in event:
         time_trigger = base64.b64decode(event['data']).decode('utf-8')
@@ -106,7 +106,7 @@ def save_Data(data, fileName):
 
     blob.upload_from_filename(f"tmp/{fileName}")
 
-    logging.info(20, "File {} uploaded to {}.".format(
+    print("File {} uploaded to {}.".format(
             f"tmp/{fileName}", fileName
         )
     )
@@ -116,7 +116,7 @@ def call_PRE_API(apiKey: str):
             'stats' : 'true'
         }
 
-    logging.info("Calling Presearch API")
+    print("Calling Presearch API")
     response = requests.get(f"https://nodes.presearch.org/api/nodes/status/{apiKey}",
             params = parameters)
     responseData = response.json()
