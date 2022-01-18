@@ -17,4 +17,4 @@ publisher.publish(
     topic_path, data
 )
 
-print(f"Publised message {data} to {topic_path}.")
+print(f"Published message {data} to {topic_path}.")

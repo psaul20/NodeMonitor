@@ -163,12 +163,12 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     topic_path = publisher.topic_path(project_id, topic_id)
     
     if timeTrigger == 'daily_5pm':        
-        message = f"{apiData[0]}'s {apiData[1]} Daily Update:\n\
+        message = f"{apiData[1]}'s {apiData[0]} Daily Update:\n\
             Nodes Online:  {str(data['nodes_online'])}/{str(data['nodes_total'])}\n\
             Node Requests: {str(data['node_requests_last_day'])}\n\
-            {apiData[1]} Earned:    {str(data['tokens_earned_last_day'])}\n\
+            {apiData[0]} Earned:    {str(data['tokens_earned_last_day'])}\n\
             $ Earned:      TBD\n\
-            Go {apiData[1]} go!!"
+            Go {apiData[0]} go!!"
     
     # Data must be a bytestring
     message = message.encode('utf-8')

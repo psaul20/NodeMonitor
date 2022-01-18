@@ -6,10 +6,12 @@ def sms_Manager(event, context):
     
     print("This Function was triggered by messageId {} published at {} to {}"
                 .format(context.event_id, context.timestamp, context.resource["name"]))
-    print(f"Data from message: {base64.b64decode(str(event['data'])).decode('utf-8')}")
+
     
     if 'data' in event:
-        message = base64.b64decode(event['data']).decode('utf-8')
+        message = str(base64.b64decode(event['data']).decode('utf-8'))
+        print(f"Data from message: {message}")
+
     
         # Authenticate gmail using app password
         auth = (os.getenv("PATRICK_GMAIL_USERNAME"), os.getenv("PATRICK_GMAIL_PASSWORD"))
