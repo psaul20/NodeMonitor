@@ -172,8 +172,6 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     
     # Data must be a bytestring
     message = message.encode('utf-8')
-    message = base64.b64encode(message)
-    print(message)
 
     publisher.publish(
         topic_path, message

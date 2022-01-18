@@ -11,7 +11,6 @@ topic_path = publisher.topic_path(project_id, topic_id)
 data = 'This is a Test'
 # Data must be a bytestring
 data = data.encode('utf-8')
-data = base64.b64encode(data)
 print(data)
 
 publisher.publish(
