@@ -7,7 +7,7 @@ import os
 import pytz
 from pytz import timezone
 from google.cloud import storage
-from google.cloud import pubsub_v1
+from google.cloud import pubsub
 
 apiDict = {
     ('PRE','Patrick'): os.getenv('PATRICK_PRE_API_KEY')
@@ -159,7 +159,7 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     project_id = os.getenv('GCP_PROJECT_ID')
     topic_id = "send-sms"
 
-    publisher = pubsub_v1.PublisherClient()
+    publisher = pubsub.PublisherClient()
     topic_path = publisher.topic_path(project_id, topic_id)
     
     if timeTrigger == 'daily_5pm':        

@@ -1,11 +1,11 @@
-from google.cloud import pubsub_v1
+from google.cloud import pubsub
 import os
 import base64
 
 project_id = os.getenv('GCP_PROJECT_ID')
 topic_id = "send-sms"
 
-publisher = pubsub_v1.PublisherClient()
+publisher = pubsub.PublisherClient()
 topic_path = publisher.topic_path(project_id, topic_id)
 
 data = 'This is a Test'
@@ -18,4 +18,4 @@ publisher.publish(
     topic_path, data
 )
 
-print(f"Published messages with custom attributes to {topic_path}.")
+print(f"Published message {data} to {topic_path}.")
