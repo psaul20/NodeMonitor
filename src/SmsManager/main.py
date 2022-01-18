@@ -9,7 +9,7 @@ def sms_Manager(event, context):
     print(f"Data from message: {base64.b64decode(str(event['data'])).decode('utf-8')}")
     
     if 'data' in event:
-        message = base64.b64decode(event['data']['message']).decode('utf-8')
+        message = base64.b64decode(event['data']).decode('utf-8')
     
         # Authenticate gmail using app password
         auth = (os.getenv("PATRICK_GMAIL_USERNAME"), os.getenv("PATRICK_GMAIL_PASSWORD"))
