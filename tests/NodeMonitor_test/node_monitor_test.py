@@ -1,9 +1,7 @@
 import base64
 import datetime as dt
 import mock
-
 import src.NodeMonitor.main as main
-
 
 mock_context = mock.Mock()
 mock_context.event_id = '123456'
