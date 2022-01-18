@@ -16,10 +16,7 @@ def test_Sms_Manager():
     message = 'This is a Test Message'
     message = base64.b64encode(message.encode('utf-8')).decode('utf-8')
     pubMessage = {
-        'topic' : 'fake_topic',
-        'data':{ 
-            'message': message
-            }
+        'data': message
     }
     
     main.sms_Manager(pubMessage, mock_context)

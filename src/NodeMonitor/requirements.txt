@@ -2,3 +2,4 @@ requests
 datetime
 pytz
 google-cloud-storage
+google-cloud-pubsub_v1

@@ -7,6 +7,7 @@ import os
 import pytz
 from pytz import timezone
 from google.cloud import storage
+from google.cloud import pubsub_v1
 
 apiDict = {
     ('PRE','Patrick'): os.getenv('PATRICK_PRE_API_KEY')
@@ -57,6 +58,8 @@ def node_monitor(event, context):
                 monitorData['current_token_price_USD'] = 0 # To be incorporated later
                 monitorData['tokens_earned_last_day_USD'] = monitorData['current_token_price_USD'] * monitorData['tokens_earned_last_day']
                 # Send data to message manager
+                send_Sms(apiLabels, monitorData, time_trigger)
+                # Save data into cloud storage
                 monitorDataName = f"{apiLabels[0]}_{apiLabels[1]}_Monitor_Data.json"
                 save_Data(monitorData, monitorDataName)
 
@@ -151,6 +154,32 @@ def check_Storage(fileName: str, hrLimit: float):
         return storedData
     else:
         return False
+    
+def send_Sms(apiData : dict, data: dict, timeTrigger: str):
+    project_id = os.getenv('GCP_PROJECT_ID')
+    topic_id = "send-sms"
+
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(project_id, topic_id)
+    
+    if timeTrigger == 'daily_5pm':        
+        message = f"{apiData[0]}'s {apiData[1]} Daily Update:\n\
+            Nodes Online:  {str(data['nodes_online'])}/{str(data['nodes_total'])}\n\
+            Node Requests: {str(data['node_requests_last_day'])}\n\
+            {apiData[1]} Earned:    {str(data['tokens_earned_last_day'])}\n\
+            $ Earned:      TBD\n\
+            Go {apiData[1]} go!!"
+    
+    # Data must be a bytestring
+    message = message.encode('utf-8')
+    message = base64.b64encode(message)
+    print(message)
+
+    publisher.publish(
+        topic_path, message
+    )
+    
+    print(f"Published message {message} to {topic_path}.")
 
 
 funcDict = {
