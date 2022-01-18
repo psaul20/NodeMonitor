@@ -5,3 +5,5 @@ deployment scripts.txt
 .pytest_cache
 .vscode
 functions-framework-samples
+testing scripts.txt
+python-pubsub

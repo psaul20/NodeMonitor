@@ -45,7 +45,6 @@ def node_monitor(event, context):
 
     print("This Function was triggered by messageId {} published at {} to {}"
                 .format(context.event_id, context.timestamp, context.resource["name"]))
-    print(f"Data from message: {str(event['data'])}")
 
     if 'data' in event:
         time_trigger = base64.b64decode(event['data']).decode('utf-8')
