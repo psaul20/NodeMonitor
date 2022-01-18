@@ -17,6 +17,5 @@ data = base64.b64encode(data['message'].encode("utf-8"))
 future = publisher.publish(
     topic_path, data
 )
-print(future.result())
 
 print(f"Published messages with custom attributes to {topic_path}.")

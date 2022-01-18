@@ -6,7 +6,7 @@ def sms_Manager(event, context):
     
     print("This Function was triggered by messageId {} published at {} to {}"
                 .format(context.event_id, context.timestamp, context.resource["name"]))
-    print(f"Data from message: {str(event['data'])}")
+    print(f"Data from message: {base64.b64decode(str(event['data'])).decode('utf-8')}")
     
     if 'data' in event:
         message = base64.b64decode(event['data']['message']).decode('utf-8')
