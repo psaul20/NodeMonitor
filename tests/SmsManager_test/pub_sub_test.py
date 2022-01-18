@@ -8,7 +8,7 @@ topic_id = "send-sms"
 publisher = pubsub.PublisherClient()
 topic_path = publisher.topic_path(project_id, topic_id)
 
-data = 'This is a Test'
+data = 'This is a\r\nNew Line Test'
 # Data must be a bytestring
 data = data.encode('utf-8')
 print(data)
