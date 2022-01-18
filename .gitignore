@@ -1,7 +1,7 @@
 .env
 .env.yaml
 nodemonitor-c1c80459b9fa.json
-deployment scripts.txt
+deployment scripts.sh
 .pytest_cache
 .vscode
 functions-framework-samples
