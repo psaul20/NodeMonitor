@@ -25,7 +25,7 @@ def sms_Manager(event, context):
 
 def send_Gmail(message: str):
     # Add extra lines to avoid CMAEK envelope
-    message = "\r\n\r\n" + message
+    message = "\r\n" + message
     # Authenticate gmail using app password
     auth = (os.getenv("PATRICK_GMAIL_USERNAME"), os.getenv("PATRICK_GMAIL_PASSWORD"))
 
