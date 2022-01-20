@@ -57,6 +57,9 @@ def node_monitor(event, context):
                 monitorData['timestamp_central_time'] = dt.datetime.now(tz= timezone('US/Central'))
                 monitorData['current_token_price_USD'] = 0 # To be incorporated later
                 monitorData['tokens_earned_last_day_USD'] = monitorData['current_token_price_USD'] * monitorData['tokens_earned_last_day']
+                tknPrice = get_Price(apiLabels[0])
+                monitorData['current_token_price_USD'] = tknPrice
+                monitorData['tokens_earned_last_day_USD'] = tknPrice * monitorData['tokens_earned_last_day']
                 # Send data to message manager
                 send_Sms(apiLabels, monitorData, time_trigger)
                 # Save data into cloud storage
@@ -166,8 +169,9 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
         message = f"{apiData[1]}'s {apiData[0]} Daily Update:" + \
         f"\r\nNodes Online:    {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
         f"\r\nNode Requests: {str(data['node_requests_last_day'])}" + \
-        "\r\n{} Earned:        {:.4f}".format(apiData[0], data['tokens_earned_last_day']) + \
-        f"\r\n$ Earned:            TBD" + \
+        "\r\n{} Earned Today:  {:.4f}".format(apiData[0], data['tokens_earned_last_day']) + \
+        "\r\n$ Earned Today:      ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
+        "\r\nPRE Price Today:     ${:.2f}".format(data['current_token_price_USD']) + \
         f"\r\nGo {apiData[0]} go!!"
     
     # Data must be a bytestring
@@ -179,6 +183,18 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     
     print(f"Published message {message} to {topic_path}.")
 
+def get_Price(symbol):
+    # For testing:
+    # url = 'http://10.0.0.102:8080/'
+    url = 'https://us-central1-nodemonitor.cloudfunctions.net/crypto-price-checker'
+    data = {'symbol': 'PRE'}
+    
+    print("Sending price request to {}.".format(url))
+    response = requests.post(url, json= data)
+    data = response.content
+    print("Content returned: {}".format(data))
+    
+    return float(data)
 
 funcDict = {
     'PRE': get_PRE_Data
