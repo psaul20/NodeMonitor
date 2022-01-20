@@ -1,13 +1,13 @@
 import requests
+import datetime as dt
+import os
 
-def call_PRE_API(apiKey: str, time):
-    parameters = {
-            'stats' : 'true',
-            ''
-        }
+parameters = {
+        'stats' : 'true',
+        'start_date' : dt.datetime(2022,1,13,15,8)
+    }
 
-    response = requests.get(f"https://nodes.presearch.org/api/nodes/status/{apiKey}",
-            params = parameters)
-    responseData = response.json()
-    
-    return responseData
+response = requests.get(f"https://nodes.presearch.org/api/nodes/status/{os.getenv('PATRICK_PRE_API_KEY')}",
+        params = parameters)
+responseData = response.json()
+print(responseData)
