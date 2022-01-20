@@ -7,3 +7,5 @@ deployment scripts.sh
 functions-framework-samples
 testing scripts.txt
 python-pubsub
+set_test_env.sh
+testing_scripts.sh
