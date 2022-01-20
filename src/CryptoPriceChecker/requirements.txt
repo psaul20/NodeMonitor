@@ -1,3 +1,3 @@
 requests
 flask_api
-dotenv
+python-dotenv
