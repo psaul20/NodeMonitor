@@ -74,22 +74,24 @@ def node_monitor(event, context):
 
 def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
     # First, check storage to see if API data has been gathered in the last hour (avoids API rate limits)
-    dailyStoredData = check_Storage(apiDataName + "_Daily", 1)
+    dailyStoredData = check_Storage(apiDataName.replace(".json","_Daily.json"), 1)
     if dailyStoredData != False:
         dailyResponseData = dailyStoredData
-    beginStoredData = check_Storage(apiDataName + "_Beginning", 1)
-    if beginStoredData != False:
-        beginResponseData = beginStoredData
-    
-    # Otherwise, call API
     else:
         # Get daily data - default call
         dailyResponseData = call_PRE_API(apiKey)
         # Save raw API Data for retrieval later if needed
         save_Data(dailyResponseData, apiDataName + "_Daily")
+    
+    beginStoredData = check_Storage(apiDataName.replace(".json","_Begin.json"), 1)
+    if beginStoredData != False:
+        beginResponseData = beginStoredData 
+    # Otherwise, call API
+    else:
         # Get data from beginning - pass kwargs
-        beginResponseData = call_PRE_API(apiKey, {'start_date':dt.datetime(2022,1,13,15,8)})
+        beginResponseData = call_PRE_API(apiKey, apiFlags={'start_date':dt.datetime(2022,1,13,15,8)})
         save_Data(beginResponseData, apiDataName + "_Begin")
+
     
     # Populate monitor data points
     returnData = monitorDataStruct.copy()
@@ -114,7 +116,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
 
     for node, data in beginResponseData['nodes'].items():
         tokenEarnedTotal += data['period']['total_pre_earned']
-    returnData['tokens_earned_last_day'] = tokenEarnedTotal
+    returnData['tokens_earned_total'] = tokenEarnedTotal
     
     return returnData
     
@@ -141,7 +143,7 @@ def call_PRE_API(apiKey: str, **apiFlags):
             'stats' : 'true'
         }
     if apiFlags:
-        for key, value in apiFlags.items():
+        for key, value in apiFlags['apiFlags'].items():
             parameters[key] = value
 
     print("Calling Presearch API")
@@ -189,13 +191,13 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     
     if timeTrigger == 'daily_5pm':        
         message = f"{apiData[1]}'s {apiData[0]} Daily Update:" + \
-        f"\r\nNodes Online:      {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
-        f"\r\nNode Requests:     {str(data['node_requests_last_day'])}" + \
+        f"\r\nNodes Online:          {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
+        f"\r\nNode Requests:       {str(data['node_requests_last_day'])}" + \
         "\r\nPRE Price Today:     ${:.2f}".format(data['current_token_price_USD']) + \
         "\r\n{} Earned Today:  {:.4f}".format(apiData[0], data['tokens_earned_last_day']) + \
-        "\r\n$ Earned Today:      ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
-        "\r\nTotal PRE Earned:    {:.4f}".format(apiData[0], data['tokens_earned_total']) + \
-        "\r\nTotal $ Earned:      ${:.2f}".format(apiData[0], data['tokens_earned_total']) + \
+        "\r\n$ Earned Today:       ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
+        "\r\nTotal {} Earned:    {:.2f}".format(apiData[0], data['tokens_earned_total']) + \
+        "\r\nTotal $ Earned:         ${:.2f}".format(data['tokens_earned_total_USD']) + \
         f"\r\nGo {apiData[0]} go!!"
     
     # Data must be a bytestring
