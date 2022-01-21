@@ -1,4 +1,5 @@
 from cmath import e
+import http
 from wsgiref.headers import Headers
 import requests
 import base64
@@ -12,7 +13,7 @@ from google.cloud import storage
 from google.cloud import pubsub
 import google.auth.transport.requests
 import google.oauth2.id_token
-import urllib
+import urllib3
 
 apiDict = {
     ('PRE','Patrick'): os.getenv('PATRICK_PRE_API_KEY')
@@ -215,29 +216,31 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
 
 def get_Price(symbol):
     url = 'https://us-central1-nodemonitor.cloudfunctions.net/crypto-price-checker'
-    data = {'symbol': 'PRE'}
-    
+    data = json.dumps({'symbol': symbol})    
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
+    http = urllib3.PoolManager()
+
+
     headers = {
-        'Authorization': "Bearer {}".format(id_token),
+        "Authorization": f"Bearer {id_token}",
         'Content-Type': "application/json"
     }
     
     print("Sending price request to {}.".format(url))
-    response = requests.post(url, headers=headers, json= data)
+    response = http.request('POST', url, headers=headers, body=data)  
     print("Response Headers: {}".format(response.headers))
-    responseData = response.content
-    print("Content returned: {}".format(data))
+    responseData = response.read()
+    print("Content returned: {}".format(responseData))
     
-    if response.status_code == 200:
+    if response.status == 200:
         try:
             return float(responseData)
         except:
             print("Error Message: {}".format(e))
             return 0.0
     else:
-        print("Response Status {} Message: {}".format(response.status_code, response.reason))
+        print("Response Status {} Message: {}".format(response.status, response.read()))
         return 0.0
 
 funcDict = {
