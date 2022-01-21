@@ -220,11 +220,13 @@ def get_Price(symbol):
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
     headers = {
-        'Authorization': "Bearer {}".format(id_token)
+        'Authorization': "Bearer {}".format(id_token),
+        'Content-Type': "application/json"
     }
     
     print("Sending price request to {}.".format(url))
     response = requests.post(url, headers=headers, json= data)
+    print("Response Headers: {}".format(response.headers))
     responseData = response.content
     print("Content returned: {}".format(data))
     
