@@ -215,7 +215,9 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     print(f"Published message {message} to {topic_path}.")
 
 def get_Price(symbol):
-    url = 'https://us-central1-nodemonitor.cloudfunctions.net/crypto-price-checker'
+    # For testing
+    url = 'http://10.0.0.102:8080/'
+    # url = 'https://us-central1-nodemonitor.cloudfunctions.net/crypto-price-checker'
     data = json.dumps({'symbol': symbol})    
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
@@ -230,7 +232,7 @@ def get_Price(symbol):
     print("Sending price request to {}.".format(url))
     response = http.request('POST', url, headers=headers, body=data)  
     print("Response Headers: {}".format(response.headers))
-    responseData = response.read()
+    responseData = response.data.decode('utf-8')
     print("Content returned: {}".format(responseData))
     
     if response.status == 200:
