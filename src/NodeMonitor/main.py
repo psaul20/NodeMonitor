@@ -216,8 +216,8 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
 
 def get_Price(symbol):
     # For testing
-    url = 'http://10.0.0.102:8080/'
-    # url = 'https://us-central1-nodemonitor.cloudfunctions.net/crypto-price-checker'
+    # url = 'http://10.0.0.102:8080/'
+    url = os.getenv('PRICE_CHECKER_URL')
     data = json.dumps({'symbol': symbol})    
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
