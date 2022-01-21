@@ -1,4 +1,5 @@
 from cmath import e
+from wsgiref.headers import Headers
 import requests
 import base64
 import json
@@ -9,6 +10,9 @@ import pytz
 from pytz import timezone
 from google.cloud import storage
 from google.cloud import pubsub
+import google.auth.transport.requests
+import google.oauth2.id_token
+import urllib
 
 apiDict = {
     ('PRE','Patrick'): os.getenv('PATRICK_PRE_API_KEY')
@@ -81,7 +85,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
         # Get daily data - default call
         dailyResponseData = call_PRE_API(apiKey)
         # Save raw API Data for retrieval later if needed
-        save_Data(dailyResponseData, apiDataName + "_Daily")
+        save_Data(dailyResponseData, apiDataName.replace(".json","_Daily.json"))
     
     beginStoredData = check_Storage(apiDataName.replace(".json","_Begin.json"), 1)
     if beginStoredData != False:
@@ -90,7 +94,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
     else:
         # Get data from beginning - pass kwargs
         beginResponseData = call_PRE_API(apiKey, apiFlags={'start_date':dt.datetime(2022,1,13,15,8)})
-        save_Data(beginResponseData, apiDataName + "_Begin")
+        save_Data(beginResponseData, apiDataName.replace(".json","_Begin.json"))
 
     
     # Populate monitor data points
@@ -210,19 +214,23 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     print(f"Published message {message} to {topic_path}.")
 
 def get_Price(symbol):
-    # For testing:
-    # url = 'http://10.0.0.102:8080/'
     url = 'https://us-central1-nodemonitor.cloudfunctions.net/crypto-price-checker'
     data = {'symbol': 'PRE'}
     
+    auth_req = google.auth.transport.requests.Request()
+    id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
+    headers = {
+        'Authorization': "Bearer {}".format(id_token)
+    }
+    
     print("Sending price request to {}.".format(url))
-    response = requests.post(url, json= data)
-    data = response.content
+    response = requests.post(url, headers=headers, json= data)
+    responseData = response.content
     print("Content returned: {}".format(data))
     
     if response.status_code == 200:
         try:
-            return float(data)
+            return float(responseData)
         except:
             print("Error Message: {}".format(e))
             return 0.0
