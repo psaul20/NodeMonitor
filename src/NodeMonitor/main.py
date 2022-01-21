@@ -229,6 +229,8 @@ def get_Price(symbol):
         'Content-Type': "application/json"
     }
     
+    print("Headers: {}".format(headers))
+    
     print("Sending price request to {}.".format(url))
     response = http.request('POST', url, headers=headers, body=data)  
     print("Response Headers: {}".format(response.headers))
