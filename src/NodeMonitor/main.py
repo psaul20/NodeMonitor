@@ -1,3 +1,4 @@
+from cmath import e
 import requests
 import base64
 import json
@@ -20,6 +21,8 @@ monitorDataStruct = {
     'node_requests_last_day' : None,
     'current_token_price_USD' : None,
     'tokens_earned_last_day_USD' : None,
+    'tokens_earned_total': None,
+    'tokens_earned_total_USD': None,
     'timestamp_central_time': None
 }
 
@@ -53,48 +56,67 @@ def node_monitor(event, context):
             # Iterate through desired APIs and call associated functions to retrieve data
             for apiLabels, apiKey in apiDict.items():
                 apiDataName = f"{apiLabels[0]}_{apiLabels[1]}_API_Data.json"
+                # Populate initial values from node API call
                 monitorData = funcDict[apiLabels[0]](apiKey, apiDataName)
                 monitorData['timestamp_central_time'] = dt.datetime.now(tz= timezone('US/Central'))
-                monitorData['current_token_price_USD'] = 0 # To be incorporated later
-                monitorData['tokens_earned_last_day_USD'] = monitorData['current_token_price_USD'] * monitorData['tokens_earned_last_day']
+                
+                # Populate remaining values based on price information                
                 tknPrice = get_Price(apiLabels[0])
                 monitorData['current_token_price_USD'] = tknPrice
                 monitorData['tokens_earned_last_day_USD'] = tknPrice * monitorData['tokens_earned_last_day']
+                monitorData['tokens_earned_total_USD'] = tknPrice * monitorData['tokens_earned_total']
+                
                 # Send data to message manager
                 send_Sms(apiLabels, monitorData, time_trigger)
                 # Save data into cloud storage
                 monitorDataName = f"{apiLabels[0]}_{apiLabels[1]}_Monitor_Data.json"
                 save_Data(monitorData, monitorDataName)
 
-def get_PRE_Data(apiKey: str, apiDataName: str) -> dict:
+def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
     # First, check storage to see if API data has been gathered in the last hour (avoids API rate limits)
-    storedData = check_Storage(apiDataName, 1)
-    if storedData != False:
-        responseData = storedData
+    dailyStoredData = check_Storage(apiDataName.replace(".json","_Daily.json"), 1)
+    if dailyStoredData != False:
+        dailyResponseData = dailyStoredData
+    else:
+        # Get daily data - default call
+        dailyResponseData = call_PRE_API(apiKey)
+        # Save raw API Data for retrieval later if needed
+        save_Data(dailyResponseData, apiDataName + "_Daily")
     
+    beginStoredData = check_Storage(apiDataName.replace(".json","_Begin.json"), 1)
+    if beginStoredData != False:
+        beginResponseData = beginStoredData 
     # Otherwise, call API
     else:
-        responseData = call_PRE_API(apiKey)
-        # Save raw API Data for retrieval later if needed
-        save_Data(responseData, apiDataName)
+        # Get data from beginning - pass kwargs
+        beginResponseData = call_PRE_API(apiKey, apiFlags={'start_date':dt.datetime(2022,1,13,15,8)})
+        save_Data(beginResponseData, apiDataName + "_Begin")
+
     
     # Populate monitor data points
     returnData = monitorDataStruct.copy()
-    returnData['nodes_total'] = responseData['nodes_returned']
+    returnData['nodes_total'] = dailyResponseData['nodes_returned']
 
+    # Count nodes online, sum node requests and tokens earned - Daily
     nodesOnlineCount = 0
-    nodeRequestTotal = 0
-    tokenEarnedTotal = 0.0
+    nodeRequestDaily = 0
+    tokenEarnedDaily = 0.0
 
-    # Count nodes online, sum node requests and tokens earned
-    for node, data in responseData['nodes'].items():
+    for node, data in dailyResponseData['nodes'].items():
         if data['status']['connected'] == True and data['status']['blocked'] == False:
             nodesOnlineCount += 1
-        nodeRequestTotal += data['period']['total_requests']
-        tokenEarnedTotal += data['period']['total_pre_earned']
+        nodeRequestDaily += data['period']['total_requests']
+        tokenEarnedDaily += data['period']['total_pre_earned']
     returnData['nodes_online'] = nodesOnlineCount
-    returnData['node_requests_last_day'] = nodeRequestTotal
-    returnData['tokens_earned_last_day'] = tokenEarnedTotal
+    returnData['node_requests_last_day'] = nodeRequestDaily
+    returnData['tokens_earned_last_day'] = tokenEarnedDaily
+    
+    # Count tokens earned since beginning    
+    tokenEarnedTotal = 0.0
+
+    for node, data in beginResponseData['nodes'].items():
+        tokenEarnedTotal += data['period']['total_pre_earned']
+    returnData['tokens_earned_total'] = tokenEarnedTotal
     
     return returnData
     
@@ -116,10 +138,13 @@ def save_Data(data, fileName):
         )
     )
 
-def call_PRE_API(apiKey: str):
+def call_PRE_API(apiKey: str, **apiFlags):
     parameters = {
             'stats' : 'true'
         }
+    if apiFlags:
+        for key, value in apiFlags['apiFlags'].items():
+            parameters[key] = value
 
     print("Calling Presearch API")
     response = requests.get(f"https://nodes.presearch.org/api/nodes/status/{apiKey}",
@@ -146,7 +171,6 @@ def check_Storage(fileName: str, hrLimit: float):
         if blob.name == fileName and blobtime < now and blobtime > (now - dt.timedelta(hours=hrLimit)):
             getBlob = True
         
-
     # If uploaded within time limit, download to local in memory storage
     if getBlob == True:
         blob = bucket.blob(fileName)
@@ -167,11 +191,13 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     
     if timeTrigger == 'daily_5pm':        
         message = f"{apiData[1]}'s {apiData[0]} Daily Update:" + \
-        f"\r\nNodes Online:    {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
-        f"\r\nNode Requests: {str(data['node_requests_last_day'])}" + \
-        "\r\n{} Earned Today:  {:.4f}".format(apiData[0], data['tokens_earned_last_day']) + \
-        "\r\n$ Earned Today:      ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
+        f"\r\nNodes Online:          {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
+        f"\r\nNode Requests:       {str(data['node_requests_last_day'])}" + \
         "\r\nPRE Price Today:     ${:.2f}".format(data['current_token_price_USD']) + \
+        "\r\n{} Earned Today:  {:.4f}".format(apiData[0], data['tokens_earned_last_day']) + \
+        "\r\n$ Earned Today:       ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
+        "\r\nTotal {} Earned:    {:.2f}".format(apiData[0], data['tokens_earned_total']) + \
+        "\r\nTotal $ Earned:         ${:.2f}".format(data['tokens_earned_total_USD']) + \
         f"\r\nGo {apiData[0]} go!!"
     
     # Data must be a bytestring
@@ -194,10 +220,18 @@ def get_Price(symbol):
     data = response.content
     print("Content returned: {}".format(data))
     
-    return float(data)
+    if response.status_code == 200:
+        try:
+            return float(data)
+        except:
+            print("Error Message: {}".format(e))
+            return 0.0
+    else:
+        print("Response Status {} Message: {}".format(response.status_code, response.reason))
+        return 0.0
 
 funcDict = {
-    'PRE': get_PRE_Data
+    'PRE': get_PRE_Node_Data
 }
         
         
