@@ -40,7 +40,7 @@ def crypto_Price_Checker(request):
         
     else:
         print("Symbol not found.")
-        return str(status.HTTP_400_BAD_REQUEST), "Symbol not found."
+        return "Symbol not found.", status.HTTP_400_BAD_REQUEST 
 
 def get_Price(symbol :str, apiKey=os.getenv('COINMARKETCAP_API_KEY')):
     url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest'
