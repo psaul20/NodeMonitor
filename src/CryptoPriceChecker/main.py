@@ -6,7 +6,6 @@ import base64
 import datetime as dt
 from flask_api import status
 from flask import request
-from dotenv import load_dotenv
 
 # TODO: Figure out how to make it an HTTP request function
 def crypto_Price_Checker(request):
@@ -19,9 +18,6 @@ def crypto_Price_Checker(request):
         Response object using `make_response`
         <https://flask.palletsprojects.com/en/1.1.x/api/#flask.make_response>.
     """
-    # Only needed for testing
-    load_dotenv()
-    
     request_json = request.get_json(silent=True)
     request_args = request.args
     print("Request JSON: {}".format(request_json))
