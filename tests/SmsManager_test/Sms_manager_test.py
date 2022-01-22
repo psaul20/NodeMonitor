@@ -13,10 +13,25 @@ mock_context.resource = {
 }
 
 def test_Sms_Manager():
-    message = 'This is a Test Message'
-    message = base64.b64encode(message.encode('utf-8')).decode('utf-8')
+    messages = str([{
+            "message": "This is a Test Message for Patrick on Telegram & SMS",
+            "recipient": "Patrick",
+            "comm_methods": ["telegram", "gmail"]
+        },
+        {
+            "message": "This is a Test Message for Patrick & Amanda on Telegram & SMS",
+            "recipient": "Patrick",
+            "comm_methods": ["telegram", "gmail"]
+        },
+        {
+            "message": "This is a Test Message for Patrick on SMS",
+            "recipient": "Patrick",
+            "comm_methods": ["gmail"]
+        }])
+    
+    messages = base64.b64encode(messages.encode('utf-8')).decode('utf-8')
     pubMessage = {
-        'data': message
+        "data": messages
     }
     
     main.sms_Manager(pubMessage, mock_context)
