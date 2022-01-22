@@ -29,7 +29,7 @@ def send_Gmail(message: str):
     # Authenticate gmail using app password
     auth = (os.getenv("PATRICK_GMAIL_USERNAME"), os.getenv("PATRICK_GMAIL_PASSWORD"))
 
-    if os.getenv('EMAIL_PHONE_NUMBER_REGISTRY') is not None:
+    if os.getenv('EMAIL_PHONE_NUMBER_REGISTRY') is not '':
         emailPhoneList = list(os.getenv('EMAIL_PHONE_NUMBER_REGISTRY').split(','))
 
         # Establish a secure session with gmail's outgoing SMTP server using your gmail account
@@ -48,10 +48,11 @@ def send_Telegram(message: str):
     bot_chatIDs = list(os.getenv('TELEGRAM_CHAT_IDS').split(','))
     
     for id in bot_chatIDs:
-        textUrl = f'https://api.telegram.org/bot{bot_token}' + \
-            f'/sendMessage?chat_id={id}' + \
-            f'&parse_mode=Markdown&text={message}'
-        
-        print(f"Sending Telegram message to chat ID: {id}")
-        response = requests.get(textUrl)
-        print(f"Telegram Status Code for chat ID {id}: {response.status_code}")
+        if id is not '' : 
+            textUrl = f'https://api.telegram.org/bot{bot_token}' + \
+                f'/sendMessage?chat_id={id}' + \
+                f'&parse_mode=Markdown&text={message}'
+            
+            print(f"Sending Telegram message to chat ID: {id}")
+            response = requests.get(textUrl)
+            print(f"Telegram Status Code for chat ID {id}: {response.status_code}")
