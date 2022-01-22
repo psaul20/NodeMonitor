@@ -1,6 +1,4 @@
 from cmath import e
-import http
-from wsgiref.headers import Headers
 import requests
 import base64
 import json
@@ -14,6 +12,8 @@ from google.cloud import pubsub
 import google.auth.transport.requests
 import google.oauth2.id_token
 import urllib3
+import certifi
+
 
 apiDict = {
     ('PRE','Patrick'): os.getenv('PATRICK_PRE_API_KEY')
@@ -221,7 +221,7 @@ def get_Price(symbol):
     data = json.dumps({'symbol': symbol})    
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
-    http = urllib3.PoolManager()
+    http = urllib3.PoolManager(ca_certs=certifi.where())
 
 
     headers = {

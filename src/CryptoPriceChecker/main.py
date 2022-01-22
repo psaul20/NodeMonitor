@@ -19,7 +19,6 @@ def crypto_Price_Checker(request):
         Response object using `make_response`
         <https://flask.palletsprojects.com/en/1.1.x/api/#flask.make_response>.
     """
-    
     # Only needed for testing
     load_dotenv()
     

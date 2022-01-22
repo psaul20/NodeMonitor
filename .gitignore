@@ -1,6 +1,7 @@
 .env
 .env.yaml
-nodemonitor-c1c80459b9fa.json
+local-dev-service-account-key.json
+default-service-account-key.json
 deployment scripts.sh
 .pytest_cache
 .vscode
