@@ -20,7 +20,8 @@ nodeMonitorList = [{
     'owner': 'Patrick',
     'api_key': os.getenv('PATRICK_PRE_API_KEY'),
     'comm_recipient': 'Patrick and Amanda',
-    'comm_methods': ['telegram']
+    'comm_methods': ['telegram'],
+    'start_date': dt.datetime(2022,1,13,15,8)
 }]
 
 monitorDataStruct = {
@@ -66,7 +67,7 @@ def node_monitor(event, context):
             for nodeMonitor in nodeMonitorList:
                 apiDataName = f"{nodeMonitor['title']}_API_Data.json"
                 # Populate initial values from node API call
-                monitorData = funcDict[nodeMonitor['token']](nodeMonitor['api_key'], apiDataName)
+                monitorData = funcDict[nodeMonitor['token']](nodeMonitor['api_key'], apiDataName, nodeMonitor['start_date'])
                 monitorData['timestamp_central_time'] = dt.datetime.now(tz= timezone('US/Central'))
                 
                 # Populate remaining values based on price information                
@@ -81,7 +82,7 @@ def node_monitor(event, context):
                 monitorDataName = f"{nodeMonitor['title']}_Monitor_Data.json"
                 save_Data(monitorData, monitorDataName)
 
-def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
+def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> dict:
     # First, check storage to see if API data has been gathered in the last hour (avoids API rate limits)
     dailyStoredData = check_Storage(apiDataName.replace(".json","_Daily.json"), 1)
     if dailyStoredData != False:
@@ -98,7 +99,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
     # Otherwise, call API
     else:
         # Get data from beginning - pass kwargs
-        beginResponseData = call_PRE_API(apiKey, apiFlags={'start_date':dt.datetime(2022,1,13,15,8)})
+        beginResponseData = call_PRE_API(apiKey, apiFlags={'start_date':startDate})
         save_Data(beginResponseData, apiDataName.replace(".json","_Begin.json"))
 
     
