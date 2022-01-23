@@ -95,5 +95,15 @@ messagerConfig = {
             "bot_token": os.getenv('TELEGRAM_BOT_TOKEN'),
             "chat_id": os.getenv('LETTERS_FROM_ALGOS_CHAT_ID')
         }
-    }
-}
+    },
+    "Daniel": {
+        "gmail": {
+            "username": os.getenv('PATRICK_GMAIL_USERNAME'),
+            "password": os.getenv('PATRICK_GMAIL_PASSWORD'),
+            "sms_address": os.getenv('DANIEL_GMAIL_SMS_ADDRESS')
+        },
+        "telegram": {
+            "bot_token": os.getenv('TELEGRAM_BOT_TOKEN'),
+            "chat_id": os.getenv('DANIEL_TELEGRAM_CHAT_ID')
+        }
+    }}
