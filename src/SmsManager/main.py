@@ -8,9 +8,9 @@ def sms_Manager(event, context):
     print("This Function was triggered by messageId {} published at {} to {}"
                 .format(context.event_id, context.timestamp, context.resource["name"]))
     if 'data' in event:
+        print(f"Data from message: {data}")
         data = event["data"].decode('utf-8')
         data = json.loads(data)
-        print(f"Data from message: {data}")
 
         for messageData in data:
             for comm_method in messageData['comm_methods']:
