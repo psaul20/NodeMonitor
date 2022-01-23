@@ -2,6 +2,7 @@ import base64
 import datetime as dt
 import mock
 import src.SmsManager.main as main
+import json
 
 mock_context = mock.Mock()
 mock_context.event_id = '123456'
@@ -13,23 +14,25 @@ mock_context.resource = {
 }
 
 def test_Sms_Manager():
-    messages = str([{
-            "message": "This is a Test Message for Patrick on Telegram & SMS",
-            "recipient": "Patrick",
+    messages = json.dumps([
+        {
+            "message": "This is a Test Message for Patrick on Telegram and SMS",
+            "comm_recipient": "Patrick",
             "comm_methods": ["telegram", "gmail"]
         },
-        {
-            "message": "This is a Test Message for Patrick & Amanda on Telegram & SMS",
-            "recipient": "Patrick",
-            "comm_methods": ["telegram", "gmail"]
-        },
-        {
-            "message": "This is a Test Message for Patrick on SMS",
-            "recipient": "Patrick",
-            "comm_methods": ["gmail"]
-        }])
+        # {
+        #     "message": "This is a Test Message for Patrick and Amanda on Telegram and SMS",
+        #     "comm_recipient": "Patrick and Amanda",
+        #     "comm_methods": ["telegram", "gmail"]
+        # },
+        # {
+        #     "message": "This is a Test Message for Patrick on SMS",
+        #     "comm_recipient": "Patrick",
+        #     "comm_methods": ["gmail"]
+        # }
+        ])
     
-    messages = base64.b64encode(messages.encode('utf-8')).decode('utf-8')
+    messages = messages.encode('utf-8')
     pubMessage = {
         "data": messages
     }
