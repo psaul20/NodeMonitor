@@ -8,39 +8,39 @@ def sms_Manager(event, context):
     print("This Function was triggered by messageId {} published at {} to {}"
                 .format(context.event_id, context.timestamp, context.resource["name"]))
     if 'data' in event:
-        data = base64.b64decode(event["data"])
+        data = event["data"].decode('utf-8')
         data = json.loads(data)
         print(f"Data from message: {data}")
 
-        for message in data:
-            for comm_method in message['comm_methods']:
-                if comm_method == 'sms':
+        for messageData in data:
+            for comm_method in messageData['comm_methods']:
+                if comm_method == 'gmail':
                     # Send to gmail
-                    print("Sending via Gmail")
-                    send_Gmail(data)
+                    print("Sending SMS via Gmail")
+                    send_Gmail(messageData)
                 
-                if comm_method == 'telegram':
+                elif comm_method == 'telegram':
                     # Send to Telegram
-                    print("Sending via Telegram")
-                    send_Telegram(data)
-        else:
-            print("Comm Method not found")
+                    print("Sending message via Telegram")
+                    send_Telegram(messageData)
+                else:
+                    print("Comm Method not found")
             
     else:
         print("Data not found")
 
-def send_Gmail(data :dict):
+def send_Gmail(messageData :dict):
 
     # Authenticate gmail using app password
-    username = messagerConfig[data['recipient']]['gmail']['username']
-    password = messagerConfig[data['recipient']]['gmail']['password']
+    username = messagerConfig[messageData['comm_recipient']]['gmail']['username']
+    password = messagerConfig[messageData['comm_recipient']]['gmail']['password']
     auth = (username, password)
     
     # Add extra lines to avoid CMAEK envelope
-    message = "\r\n" + data['message']
+    message = "\r\n" + messageData['message']
 
-    if messagerConfig[data['recipient']['gmail']['sms_address']] != '':
-        smsAddress = messagerConfig[data['recipient']['gmail']['sms_address']]
+    if messagerConfig[messageData['comm_recipient']]['gmail']['sms_address'] != '':
+        smsAddress = messagerConfig[messageData['comm_recipient']]['gmail']['sms_address']
 
         # Establish a secure session with gmail's outgoing SMTP server using your gmail account
         server = smtplib.SMTP( "smtp.gmail.com", 587 )
@@ -51,27 +51,27 @@ def send_Gmail(data :dict):
         server.sendmail( auth[0], smsAddress, message)
         print(f"Message Sent to {smsAddress}")
     else:
-        print("No sms addresses found for {}.".format(data['recipient']))
+        print("No sms addresses found for {}.".format(messageData['comm_recipient']))
     
 
-def send_Telegram(data :dict): 
-    bot_token = messagerConfig[data['recipient']]['telegram']['bot_token']
-    bot_chatID = messagerConfig[data['recipient']]['telegram']['chat_id']
-    message = data['message']
+def send_Telegram(messageData :dict): 
+    bot_token = messagerConfig[messageData['comm_recipient']]['telegram']['bot_token']
+    bot_chatID = messagerConfig[messageData['comm_recipient']]['telegram']['chat_id']
+    message = messageData['message']
     
     if bot_token != '':
         if bot_chatID != '':
             textUrl = f'https://api.telegram.org/bot{bot_token}' + \
-                f'/sendMessage?chat_id={id}' + \
+                f'/sendMessage?chat_id={bot_chatID}' + \
                 f'&parse_mode=Markdown&text={message}'
             
-            print(f"Sending Telegram message to chat ID: {id}")
+            print(f"Sending Telegram message to chat ID: {bot_chatID}")
             response = requests.get(textUrl)
-            print(f"Telegram Status Code for chat ID {id}: {response.status_code}")
+            print(f"Telegram Status Code for chat ID {bot_chatID}: {response.status_code}")
         else:
-            print('No chat IDs found for {}'.format(data['recipient']))
+            print('No chat IDs found for {}'.format(messageData['comm_recipient']))
     else:
-        print('No bot token found for {}'.format(data['recipient']))
+        print('No bot token found for {}'.format(messageData['comm_recipient']))
 
 messagerConfig = {
     "Patrick": {
@@ -85,7 +85,7 @@ messagerConfig = {
             "chat_id": os.getenv('PATRICK_TELEGRAM_CHAT_ID')
         }
     },
-    "Patrick & Amanda": {
+    "Patrick and Amanda": {
         "gmail": {
             "username": os.getenv('PATRICK_GMAIL_USERNAME'),
             "password": os.getenv('PATRICK_GMAIL_PASSWORD'),
