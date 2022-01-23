@@ -9,7 +9,7 @@ def sms_Manager(event, context):
                 .format(context.event_id, context.timestamp, context.resource["name"]))
     if 'data' in event:
         print(f"Data from message: {event['data']}")
-        data = str(base64.b64decode(event["data"])).decode('utf-8')
+        data = str(base64.b64decode(event["data"]).decode('utf-8'))
         data = json.loads(data)
 
         for messageData in data:
