@@ -14,10 +14,14 @@ import google.oauth2.id_token
 import urllib3
 import certifi
 
-
-apiDict = {
-    ('PRE','Patrick'): os.getenv('PATRICK_PRE_API_KEY')
-}
+nodeMonitorList = [{
+    'title': 'Patrick_PRE',
+    'token': 'PRE',
+    'owner': 'Patrick',
+    'api_key': os.getenv('PATRICK_PRE_API_KEY'),
+    'comm_recipient': 'Patrick and Amanda',
+    'comm_methods': ['telegram']
+}]
 
 monitorDataStruct = {
     'nodes_total': None,
@@ -56,25 +60,25 @@ def node_monitor(event, context):
                 .format(context.event_id, context.timestamp, context.resource["name"]))
 
     if 'data' in event:
-        time_trigger = base64.b64decode(event['data']).decode('utf-8')
-        if time_trigger == 'daily_5pm':
+        timeTrigger = base64.b64decode(event['data']).decode('utf-8')
+        if timeTrigger == 'daily_5pm':
             # Iterate through desired APIs and call associated functions to retrieve data
-            for apiLabels, apiKey in apiDict.items():
-                apiDataName = f"{apiLabels[0]}_{apiLabels[1]}_API_Data.json"
+            for nodeMonitor in nodeMonitorList:
+                apiDataName = f"{nodeMonitor['title']}_API_Data.json"
                 # Populate initial values from node API call
-                monitorData = funcDict[apiLabels[0]](apiKey, apiDataName)
+                monitorData = funcDict[nodeMonitor['token']](nodeMonitor['api_key'], apiDataName)
                 monitorData['timestamp_central_time'] = dt.datetime.now(tz= timezone('US/Central'))
                 
                 # Populate remaining values based on price information                
-                tknPrice = get_Price(apiLabels[0])
+                tknPrice = get_Price(nodeMonitor['token'])
                 monitorData['current_token_price_USD'] = tknPrice
                 monitorData['tokens_earned_last_day_USD'] = tknPrice * monitorData['tokens_earned_last_day']
                 monitorData['tokens_earned_total_USD'] = tknPrice * monitorData['tokens_earned_total']
                 
                 # Send data to message manager
-                send_Sms(apiLabels, monitorData, time_trigger)
+                send_Sms(nodeMonitor, monitorData, timeTrigger)
                 # Save data into cloud storage
-                monitorDataName = f"{apiLabels[0]}_{apiLabels[1]}_Monitor_Data.json"
+                monitorDataName = f"{nodeMonitor['title']}_Monitor_Data.json"
                 save_Data(monitorData, monitorDataName)
 
 def get_PRE_Node_Data(apiKey: str, apiDataName: str) -> dict:
@@ -187,7 +191,7 @@ def check_Storage(fileName: str, hrLimit: float):
     else:
         return False
     
-def send_Sms(apiData : dict, data: dict, timeTrigger: str):
+def send_Sms(nodeMonitor : dict, data: dict, timeTrigger: str):
     project_id = os.getenv('GCP_PROJECT_ID')
     topic_id = "send-sms"
 
@@ -195,22 +199,25 @@ def send_Sms(apiData : dict, data: dict, timeTrigger: str):
     topic_path = publisher.topic_path(project_id, topic_id)
     
     if timeTrigger == 'daily_5pm':        
-        message = f"{apiData[1]}'s {apiData[0]} Daily Update:" + \
+        message = f"{nodeMonitor['owner']}'s {nodeMonitor['token']} Daily Update:" + \
         f"\r\nNodes Online:          {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
         f"\r\nNode Requests:       {str(data['node_requests_last_day'])}" + \
         "\r\nPRE Price Today:     ${:.2f}".format(data['current_token_price_USD']) + \
-        "\r\n{} Earned Today:  {:.4f}".format(apiData[0], data['tokens_earned_last_day']) + \
+        "\r\n{} Earned Today:  {:.4f}".format(nodeMonitor['token'], data['tokens_earned_last_day']) + \
         "\r\n$ Earned Today:       ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
-        "\r\nTotal {} Earned:    {:.2f}".format(apiData[0], data['tokens_earned_total']) + \
+        "\r\nTotal {} Earned:    {:.2f}".format(nodeMonitor['token'], data['tokens_earned_total']) + \
         "\r\nTotal $ Earned:         ${:.2f}".format(data['tokens_earned_total_USD']) + \
-        f"\r\nGo {apiData[0]} go!!"
+        f"\r\nGo {nodeMonitor['token']} go!!"
     
     # Data must be a bytestring
-    message = message.encode('utf-8')
-
-    publisher.publish(
-        topic_path, message
-    )
+    messageData = json.dumps([{
+        "message": message,
+        "comm_recipient": nodeMonitor['comm_recipient'],
+        "comm_methods": nodeMonitor['comm_methods']
+    }])
+    messageData = messageData.encode('utf-8')
+    
+    publisher.publish(topic_path, messageData)
     
     print(f"Published message {message} to {topic_path}.")
 
@@ -222,8 +229,7 @@ def get_Price(symbol):
     auth_req = google.auth.transport.requests.Request()
     id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
     http = urllib3.PoolManager(ca_certs=certifi.where())
-
-
+    
     headers = {
         "Authorization": f"Bearer {id_token}",
         'Content-Type': "application/json"

@@ -32,7 +32,7 @@ def test_Sms_Manager():
         # }
         ])
     
-    messages = messages.encode('utf-8')
+    messages = base64.b64encode(messages.encode('utf-8'))
     pubMessage = {
         "data": messages
     }
