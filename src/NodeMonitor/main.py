@@ -21,7 +21,16 @@ nodeMonitorList = [{
     'api_key': os.getenv('PATRICK_PRE_API_KEY'),
     'comm_recipient': 'Patrick and Amanda',
     'comm_methods': ['telegram'],
-    'start_date': dt.datetime(2022,1,13,15,8)
+    'start_date': dt.datetime(2022, 1, 13, 15, 8)
+},
+    {
+    'title': 'Daniel_PRE',
+    'token': 'PRE',
+    'owner': 'Daniel',
+    'api_key': os.getenv('DANIEL_PRE_API_KEY'),
+    'comm_recipient': 'Daniel',
+    'comm_methods': ['telegram', 'gmail'],
+    'start_date': dt.datetime(2022, 1, 1, 3, 50)
 }]
 
 monitorDataStruct = {
@@ -83,7 +92,7 @@ def node_monitor(event, context):
                 save_Data(monitorData, monitorDataName)
 
 def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> dict:
-    # First, check storage to see if API data has been gathered in the last hour (avoids API rate limits)
+    # Next, check storage to see if API data has been gathered in the last hour (avoids API rate limits)
     dailyStoredData = check_Storage(apiDataName.replace(".json","_Daily.json"), 1)
     if dailyStoredData != False:
         dailyResponseData = dailyStoredData
@@ -235,12 +244,9 @@ def get_Price(symbol):
         "Authorization": f"Bearer {id_token}",
         'Content-Type': "application/json"
     }
-    
-    print("Headers: {}".format(headers))
-    
+        
     print("Sending price request to {}.".format(url))
     response = http.request('POST', url, headers=headers, body=data)  
-    print("Response Headers: {}".format(response.headers))
     responseData = response.data.decode('utf-8')
     print("Content returned: {}".format(responseData))
     

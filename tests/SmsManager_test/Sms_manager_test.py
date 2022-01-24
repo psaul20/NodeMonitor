@@ -30,6 +30,11 @@ def test_Sms_Manager():
         #     "comm_recipient": "Patrick",
         #     "comm_methods": ["gmail"]
         # }
+        {
+            "message": "This is a Test Message for Daniel on SMS",
+            "comm_recipient": "Daniel",
+            "comm_methods": ["gmail"]
+        }
         ])
     
     messages = base64.b64encode(messages.encode('utf-8'))
