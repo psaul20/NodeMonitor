@@ -2,7 +2,6 @@
 .env.yaml
 local-dev-service-account-key.json
 default-service-account-key.json
-deployment scripts.sh
 .pytest_cache
 .vscode
 functions-framework-samples
