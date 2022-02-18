@@ -30,7 +30,7 @@ nodeMonitorList = [{
     'api_key': os.getenv('DANIEL_PRE_API_KEY'),
     'comm_recipient': 'Daniel',
     'comm_methods': ['telegram', 'gmail'],
-    'start_date': dt.datetime(2022, 1, 1, 3, 50)
+    'start_date': dt.datetime(2022, 1, 1, 3, 51)
 }]
 
 monitorDataStruct = {
