@@ -119,7 +119,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
     # Otherwise, call API
     else:
         # Get data from beginning of the month - pass kwargs
-        firstDayOfMonth = given_date.replace(day=1)
+        firstDayOfMonth = dt.datetime.today().replace(day=1)
         monthResponseData = call_PRE_API(apiKey, apiFlags={'start_date':firstDayOfMonth})
         save_Data(monthResponseData, apiDataName.replace(".json","_Month.json"))
 
@@ -229,14 +229,15 @@ def send_Sms(nodeMonitor : dict, data: dict, timeTrigger: str):
     
     if timeTrigger == 'daily_5pm':        
         message = f"{nodeMonitor['owner']}'s {nodeMonitor['token']} Daily Update:" + \
-        f"\r\nNodes Online:          {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
-        f"\r\nNode Requests:       {str(data['node_requests_last_day'])}" + \
-        "\r\nPRE Price Today:     ${:.2f}".format(data['current_token_price_USD']) + \
-        "\r\n{} Earned Today:  {:.4f}".format(nodeMonitor['token'], data['tokens_earned_last_day']) + \
-        "\r\n$ Earned Today:       ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
-        "\r\n$ Earned This Month:       ${:.2f}".format(data['tokens_earned_this_month_USD']) + \
-        "\r\nTotal {} Earned:    {:.2f}".format(nodeMonitor['token'], data['tokens_earned_total']) + \
-        "\r\nTotal $ Earned:         ${:.2f}".format(data['tokens_earned_total_USD']) + \
+        f"\r\nNodes Online:             {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
+        f"\r\nNode Requests:          {str(data['node_requests_last_day'])}" + \
+        "\r\nPRE Price Today:        ${:.2f}".format(data['current_token_price_USD']) + \
+        "\r\n{} Earned Today:     {:.4f}".format(nodeMonitor['token'], data['tokens_earned_last_day']) + \
+        "\r\n$ Earned Today:         ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
+        "\r\n{} Earned This Month:  {:.4f}".format(nodeMonitor['token'], data['tokens_earned_this_month']) + \
+        "\r\n$ Earned This Month:    ${:.2f}".format(data['tokens_earned_this_month_USD']) + \
+        "\r\nTotal {} Earned:       {:.2f}".format(nodeMonitor['token'], data['tokens_earned_total']) + \
+        "\r\nTotal $ Earned:            ${:.2f}".format(data['tokens_earned_total_USD']) + \
         f"\r\nGo {nodeMonitor['token']} go!!"
     
     # Data must be a bytestring
