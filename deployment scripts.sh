@@ -1,7 +1,7 @@
 ## Deploy node monitor
 gcloud functions deploy node-monitor \
   --source https://source.developers.google.com/projects/nodemonitor/repos/github_psaul20_nodemonitor/moveable-aliases/master/paths/src/NodeMonitor \
-  --memory 256MB \
+  --memory 512MB \
   --runtime python39 \
   --env-vars-file=src/NodeMonitor/.env.yaml \
   --trigger-topic=time-trigger \
