@@ -40,6 +40,7 @@ monitorDataStruct = {
     'node_requests_last_day' : None,
     'current_token_price_USD' : None,
     'tokens_earned_last_day_USD' : None,
+    'tokens_earned_this_month_USD' : None,
     'tokens_earned_total': None,
     'tokens_earned_total_USD': None,
     'timestamp_central_time': None
@@ -83,6 +84,7 @@ def node_monitor(event, context):
                 tknPrice = get_Price(nodeMonitor['token'])
                 monitorData['current_token_price_USD'] = tknPrice
                 monitorData['tokens_earned_last_day_USD'] = tknPrice * monitorData['tokens_earned_last_day']
+                monitorData['tokens_earned_this_month_USD'] = tknPrice * monitorData['tokens_earned_this_month']
                 monitorData['tokens_earned_total_USD'] = tknPrice * monitorData['tokens_earned_total']
                 
                 # Send data to message manager
@@ -110,6 +112,16 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
         # Get data from beginning - pass kwargs
         beginResponseData = call_PRE_API(apiKey, apiFlags={'start_date':startDate})
         save_Data(beginResponseData, apiDataName.replace(".json","_Begin.json"))
+    
+    monthStoredData = check_Storage(apiDataName.replace(".json","_Month.json"), 1)
+    if monthStoredData != False:
+        monthResponseData = monthStoredData 
+    # Otherwise, call API
+    else:
+        # Get data from beginning - pass kwargs
+        firstDayOfMonth = given_date.replace(day=1)
+        monthResponseData = call_PRE_API(apiKey, apiFlags={'start_date':firstDayOfMonth})
+        save_Data(monthResponseData, apiDataName.replace(".json","_Month.json"))
 
     
     # Populate monitor data points
@@ -129,13 +141,20 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
     returnData['nodes_online'] = nodesOnlineCount
     returnData['node_requests_last_day'] = nodeRequestDaily
     returnData['tokens_earned_last_day'] = tokenEarnedDaily
-    
+
     # Count tokens earned since beginning    
     tokenEarnedTotal = 0.0
 
     for node, data in beginResponseData['nodes'].items():
         tokenEarnedTotal += data['period']['total_pre_earned']
     returnData['tokens_earned_total'] = tokenEarnedTotal
+    
+     # Count tokens earned since beginning    
+    tokenEarnedThisMonth = 0.0
+
+    for node, data in monthResponseData['nodes'].items():
+        tokenEarnedThisMonth += data['period']['total_pre_earned']
+    returnData['tokens_earned_this_month'] = tokenEarnedThisMonth
     
     return returnData
     
@@ -215,6 +234,7 @@ def send_Sms(nodeMonitor : dict, data: dict, timeTrigger: str):
         "\r\nPRE Price Today:     ${:.2f}".format(data['current_token_price_USD']) + \
         "\r\n{} Earned Today:  {:.4f}".format(nodeMonitor['token'], data['tokens_earned_last_day']) + \
         "\r\n$ Earned Today:       ${:.2f}".format(data['tokens_earned_last_day_USD']) + \
+        "\r\n$ Earned This Month:       ${:.2f}".format(data['tokens_earned_this_month_USD']) + \
         "\r\nTotal {} Earned:    {:.2f}".format(nodeMonitor['token'], data['tokens_earned_total']) + \
         "\r\nTotal $ Earned:         ${:.2f}".format(data['tokens_earned_total_USD']) + \
         f"\r\nGo {nodeMonitor['token']} go!!"
