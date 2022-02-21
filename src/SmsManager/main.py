@@ -48,8 +48,10 @@ def send_Gmail(messageData :dict):
         server.login(auth[0], auth[1])
 
         # Send text message through SMS gateway of destination number
-        server.sendmail( auth[0], smsAddress, message)
-        print(f"Message Sent to {smsAddress}")
+        response = server.sendmail( auth[0], smsAddress, message)
+        server.quit()
+        print("Response: {}".format(response))
+
     else:
         print("No sms addresses found for {}.".format(messageData['comm_recipient']))
     
