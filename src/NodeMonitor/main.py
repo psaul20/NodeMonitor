@@ -127,7 +127,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
     # Populate monitor data points
     returnData = monitorDataStruct.copy()
     returnData['nodes_total'] = dailyResponseData['nodes_returned']
-    
+
     # Count nodes online, sum node requests and tokens earned - Daily
     nodesOnlineCount = 0
     nodeRequestDaily = 0
@@ -141,7 +141,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
     returnData['nodes_online'] = nodesOnlineCount
     returnData['node_requests_last_day'] = nodeRequestDaily
     returnData['tokens_earned_last_day'] = tokenEarnedDaily
-
+    
     # Count tokens earned since beginning    
     tokenEarnedTotal = 0.0
 
