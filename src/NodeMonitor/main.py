@@ -118,7 +118,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
         monthResponseData = monthStoredData 
     # Otherwise, call API
     else:
-        # Get data from beginning - pass kwargs
+        # Get data from beginning of the month - pass kwargs
         firstDayOfMonth = given_date.replace(day=1)
         monthResponseData = call_PRE_API(apiKey, apiFlags={'start_date':firstDayOfMonth})
         save_Data(monthResponseData, apiDataName.replace(".json","_Month.json"))
@@ -127,7 +127,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
     # Populate monitor data points
     returnData = monitorDataStruct.copy()
     returnData['nodes_total'] = dailyResponseData['nodes_returned']
-
+    
     # Count nodes online, sum node requests and tokens earned - Daily
     nodesOnlineCount = 0
     nodeRequestDaily = 0
