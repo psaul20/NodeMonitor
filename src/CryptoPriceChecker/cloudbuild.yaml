@@ -4,10 +4,10 @@ steps:
   - gcloud
   - functions
   - deploy
-  - crypto-price-checkergit 
-  - --memory 256MB
-  - --runtime python39
-  - --env-vars-file src/CryptoPriceChecker/.env.yaml
+  - crypto-price-checker
+  - --memory=256MB
+  - --runtime=python39
+  - --env-vars-file=src/CryptoPriceChecker/.env.yaml
   - --trigger-http
-  - --region us-central1
-  - --ingress-settings internal-only
+  - --region=us-central1
+  - --ingress-settings=internal-only

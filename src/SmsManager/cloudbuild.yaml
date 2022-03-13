@@ -5,9 +5,9 @@ steps:
   - functions
   - deploy
   - sms-manager
-  - --memory 256MB
-  - --runtime python39
-  - --env-vars-file src/SmsManager/.env.yaml
-  - --trigger-topic send-sms
-  - --region us-central1
-  - --ingress-settings internal-only
+  - --memory=256MB
+  - --runtime=python39
+  - --env-vars-file=src/SmsManager/.env.yaml
+  - --trigger-topic=send-sms
+  - --region=us-central1
+  - --ingress-settings=internal-only
