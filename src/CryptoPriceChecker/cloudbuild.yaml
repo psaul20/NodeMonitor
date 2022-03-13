@@ -10,4 +10,3 @@ steps:
   - --env-vars-file=src/CryptoPriceChecker/.env.yaml
   - --trigger-http
   - --region=us-central1
-  - --ingress-settings=internal-only
