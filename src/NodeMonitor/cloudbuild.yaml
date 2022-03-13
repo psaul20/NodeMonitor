@@ -1,0 +1,14 @@
+steps:
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  args:
+  - gcloud
+  - functions
+  - deploy
+  - node-monitor
+  - --memory 256MB
+  - --runtime python39
+  - --env-vars-file src/NodeMonitor/.env.yaml
+  - --trigger-topic time-trigger
+  - --region us-central1
+  - --ingress-settings internal-only
+  - --timeout 300s

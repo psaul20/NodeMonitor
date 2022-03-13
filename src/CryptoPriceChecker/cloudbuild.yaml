@@ -1,0 +1,13 @@
+steps:
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  args:
+  - gcloud
+  - functions
+  - deploy
+  - crypto-price-checkergit 
+  - --memory 256MB
+  - --runtime python39
+  - --env-vars-file src/CryptoPriceChecker/.env.yaml
+  - --trigger-http
+  - --region us-central1
+  - --ingress-settings internal-only
