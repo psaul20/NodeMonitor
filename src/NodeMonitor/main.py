@@ -47,26 +47,6 @@ monitorDataStruct = {
 
 
 def node_monitor(event, context):
-    # """Background Cloud Function to be triggered by Pub/Sub events.
-    # Args:
-    #      event (dict):  The dictionary with data specific to this type of
-    #                     event. The `@type` field maps to
-    #                      `type.googleapis.com/google.pubsub.v1.PubsubMessage`.
-    #                     The `data` field maps to the PubsubMessage data
-    #                     in a base64-encoded string. The `attributes` field maps
-    #                     to the PubsubMessage attributes if any is present.
-    #      context (google.cloud.functions.Context): Metadata of triggering event
-    #                     including `event_id` which maps to the PubsubMessage
-    #                     messageId, `timestamp` which maps to the PubsubMessage
-    #                     publishTime, `event_type` which maps to
-    #                     `google.pubsub.topic.publish`, and `resource` which is
-    #                     a dictionary that describes the service API endpoint
-    #                     pubsub.googleapis.com, the triggering topic's name, and
-    #                     the triggering event type
-    #                     `type.googleapis.com/google.pubsub.v1.PubsubMessage`.
-    # Returns:
-    #     None. The output is written to Cloud Logging.
-
     print("This Function was triggered by messageId {} published at {} to {}"
           .format(context.event_id, context.timestamp, context.resource["name"]))
 
@@ -76,9 +56,10 @@ def node_monitor(event, context):
             # Iterate through desired APIs and call associated functions to retrieve data
             for nodeMonitor in nodeMonitorList:
                 apiDataName = f"{nodeMonitor['title']}_API_Data.json"
+                monitorDataName = f"{nodeMonitor['title']}_Monitor_Data.json"
                 # Populate initial values from node API call
                 monitorData = funcDict[nodeMonitor['token']](
-                    nodeMonitor['api_key'], apiDataName, nodeMonitor['start_date'])
+                    nodeMonitor['api_key'], apiDataName, monitorDataName, nodeMonitor['start_date'])
                 monitorData['timestamp_central_time'] = dt.datetime.now(
                     tz=timezone('US/Central'))
 
@@ -95,12 +76,11 @@ def node_monitor(event, context):
                 # Send data to message manager
                 send_Sms(nodeMonitor, monitorData, timeTrigger)
                 # Save data into cloud storage
-                monitorDataName = f"{nodeMonitor['title']}_Monitor_Data.json"
                 save_Data(monitorData, monitorDataName)
 
 
-def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> dict:
-    # Next, check storage to see if API data has been gathered in the last hour (avoids API rate limits)
+def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, startDate: dt.datetime) -> dict:
+    # Check storage to see if API data has been gathered in the last hour (avoids API rate limits)
     dailyStoredData = check_Storage(
         apiDataName.replace(".json", "_Daily.json"), 1)
     if dailyStoredData is not False:
@@ -112,17 +92,24 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
         save_Data(dailyResponseData, apiDataName.replace(
             ".json", "_Daily.json"))
 
-    beginStoredData = check_Storage(
-        apiDataName.replace(".json", "_Begin.json"), 1)
-    if beginStoredData is not False:
-        beginResponseData = beginStoredData
+    # Get data from beginning - incremented from last pull
+    # First, check if incremental data pulled in last hour
+    beginStoredDataIncr = check_Storage(
+        apiDataName.replace(".json", "_Begin_Incr.json"), 1)
+    if beginStoredDataIncr is not False:
+        beginResponseData = beginStoredDataIncr
     # Otherwise, call API
     else:
-        # Get data from beginning - pass kwargs
-        beginResponseData = call_PRE_API(
-            apiKey, apiFlags={'start_date': startDate})
+        # Get data from beginning, incremented from last data pull - pass kwargs
+        lastDataStruct = check_Storage(monitorDataName)
+        if lastDataStruct is not False:
+            beginResponseData = call_PRE_API(
+                apiKey, apiFlags={'start_date': lastDataStruct['timestamp_central_time']})
+        else:
+            beginResponseData = call_PRE_API(
+                apiKey, apiFlags={'start_date': startDate})
         save_Data(beginResponseData, apiDataName.replace(
-            ".json", "_Begin.json"))
+            ".json", "_Begin_Incr.json"))
 
     monthStoredData = check_Storage(
         apiDataName.replace(".json", "_Month.json"), 1)
@@ -155,14 +142,17 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, startDate: dt.datetime) -> 
     returnData['node_requests_last_day'] = nodeRequestDaily
     returnData['tokens_earned_last_day'] = tokenEarnedDaily
 
-    # Count tokens earned since beginning
-    tokenEarnedTotal = 0.0
+    # Increment tokens earned since beginning
+    if lastDataStruct is not False:
+        tokenEarnedTotal = lastDataStruct['tokens_earned_total']
+    else:
+        tokenEarnedTotal = 0.0
 
     for node, data in beginResponseData['nodes'].items():
         tokenEarnedTotal += data['period']['total_pre_earned']
     returnData['tokens_earned_total'] = tokenEarnedTotal
 
-    # Count tokens earned since beginning
+    # Count tokens earned since beginning of month
     tokenEarnedThisMonth = 0.0
 
     for node, data in monthResponseData['nodes'].items():
@@ -204,7 +194,7 @@ def call_PRE_API(apiKey: str, **apiFlags):
     return responseData
 
 
-def check_Storage(fileName: str, hrLimit: float):
+def check_Storage(fileName: str, hrLimit: float = 0.0):
     bucketName = os.getenv("STORAGE_BUCKET_NAME")
     getBlob = False
 
@@ -218,9 +208,13 @@ def check_Storage(fileName: str, hrLimit: float):
     now = dt.datetime.now().astimezone(utcTz)
 
     for blob in blobs:
-        blobtime = blob.updated.astimezone(utcTz)
-        if blob.name == fileName and blobtime < now and blobtime > (now - dt.timedelta(hours=hrLimit)):
-            getBlob = True
+        if hrLimit == 0.0:
+            if blob.name == fileName:
+                getBlob = True
+        else:
+            blobtime = blob.updated.astimezone(utcTz)
+            if blob.name == fileName and blobtime < now and blobtime > (now - dt.timedelta(hours=hrLimit)):
+                getBlob = True
 
     # If uploaded within time limit, download to local in memory storage
     if getBlob is True:
