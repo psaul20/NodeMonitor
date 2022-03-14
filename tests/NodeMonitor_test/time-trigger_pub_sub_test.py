@@ -1,6 +1,5 @@
 from google.cloud import pubsub
 import os
-import base64
 
 project_id = os.getenv('GCP_PROJECT_ID')
 topic_id = "time-trigger"
