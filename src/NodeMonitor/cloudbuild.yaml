@@ -10,5 +10,5 @@ steps:
   - --env-vars-file=src/NodeMonitor/.env.yaml
   - --trigger-topic=time-trigger
   - --region=us-central1
-  - --ingress-settings=internal-only
+  - --ingress-settings=all
   - --timeout=300s
