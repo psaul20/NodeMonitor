@@ -5,7 +5,7 @@ steps:
   - functions
   - deploy
   - node-monitor
-  - --memory=512MB
+  - --memory=1024MB
   - --runtime=python39
   - --env-vars-file=src/NodeMonitor/.env.yaml
   - --trigger-topic=time-trigger
