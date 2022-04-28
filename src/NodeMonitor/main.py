@@ -80,6 +80,9 @@ def node_monitor(event, context):
 
 
 def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, startDate: dt.datetime) -> dict:
+    # Get data from beginning, incremented from last data pull - pass kwargs
+    lastDataStruct = check_Storage(monitorDataName)
+    
     # Check storage to see if API data has been gathered in the last hour (avoids API rate limits)
     dailyStoredData = check_Storage(
         apiDataName.replace(".json", "_Daily.json"), 1)
@@ -100,8 +103,6 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, start
         beginResponseData = beginStoredDataIncr
     # Otherwise, call API
     else:
-        # Get data from beginning, incremented from last data pull - pass kwargs
-        lastDataStruct = check_Storage(monitorDataName)
         if lastDataStruct is not False:
             beginResponseData = call_PRE_API(
                 apiKey, apiFlags={'start_date': lastDataStruct['timestamp_central_time']})
