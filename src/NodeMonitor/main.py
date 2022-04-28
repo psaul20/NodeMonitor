@@ -82,7 +82,7 @@ def node_monitor(event, context):
 def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, startDate: dt.datetime) -> dict:
     # Get data from beginning, incremented from last data pull - pass kwargs
     lastDataStruct = check_Storage(monitorDataName)
-    
+
     # Check storage to see if API data has been gathered in the last hour (avoids API rate limits)
     dailyStoredData = check_Storage(
         apiDataName.replace(".json", "_Daily.json"), 1)
