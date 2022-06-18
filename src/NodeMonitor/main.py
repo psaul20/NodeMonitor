@@ -21,16 +21,17 @@ nodeMonitorList = [{
     'comm_recipient': 'Patrick and Amanda',
     'comm_methods': ['telegram'],
     'start_date': dt.datetime(2022, 1, 13, 15, 8)
-},
-    {
-    'title': 'Daniel_PRE',
-    'token': 'PRE',
-    'owner': 'Daniel',
-    'api_key': os.getenv('DANIEL_PRE_API_KEY'),
-    'comm_recipient': 'Daniel',
-    'comm_methods': ['telegram', 'gmail'],
-    'start_date': dt.datetime(2022, 1, 1, 3, 51)
-}]
+}#,
+#     {
+#     'title': 'Daniel_PRE',
+#     'token': 'PRE',
+#     'owner': 'Daniel',
+#     'api_key': os.getenv('DANIEL_PRE_API_KEY'),
+#     'comm_recipient': 'Daniel',
+#     'comm_methods': ['telegram', 'gmail'],
+#     'start_date': dt.datetime(2022, 1, 1, 3, 51)
+# }
+]
 
 monitorDataStruct = {
     'nodes_total': None,
