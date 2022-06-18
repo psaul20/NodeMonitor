@@ -1,4 +1,5 @@
 from cmath import e
+import logging
 import requests
 import base64
 import json
@@ -150,9 +151,12 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, start
     else:
         tokenEarnedTotal = 0.0
 
-    for node, data in beginResponseData['nodes'].items():
-        tokenEarnedTotal += data['period']['total_pre_earned']
-    returnData['tokens_earned_total'] = tokenEarnedTotal
+    try:
+        for node, data in beginResponseData['nodes'].items():
+            tokenEarnedTotal += data['period']['total_pre_earned']
+        returnData['tokens_earned_total'] = tokenEarnedTotal
+    except e:
+        logging.exception("beginResponseData error:{}".format(beginResponseData)) 
 
     # Count tokens earned since beginning of month
     tokenEarnedThisMonth = 0.0
