@@ -156,7 +156,7 @@ def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, start
             tokenEarnedTotal += data['period']['total_pre_earned']
         returnData['tokens_earned_total'] = tokenEarnedTotal
     except e:
-        logging.exception("beginResponseData error:{}".format(beginResponseData)) 
+        print("beginResponseData error:{}".format(beginResponseData))
 
     # Count tokens earned since beginning of month
     tokenEarnedThisMonth = 0.0
