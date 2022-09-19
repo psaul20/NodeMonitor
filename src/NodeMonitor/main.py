@@ -12,6 +12,7 @@ import google.auth.transport.requests
 import google.oauth2.id_token
 import urllib3
 import certifi
+import traceback
 
 nodeMonitorList = [{
     'title': 'Patrick_PRE',
@@ -51,12 +52,12 @@ def node_monitor(event, context):
     print("This Function was triggered by messageId {} published at {} to {}"
           .format(context.event_id, context.timestamp, context.resource["name"]))
 
-    try:
-        if 'data' in event:
-            timeTrigger = base64.b64decode(event['data']).decode('utf-8')
-            if timeTrigger == 'daily_5pm':
-                # Iterate through desired APIs and call associated functions to retrieve data
-                for nodeMonitor in nodeMonitorList:
+    if 'data' in event:
+        timeTrigger = base64.b64decode(event['data']).decode('utf-8')
+        if timeTrigger == 'daily_5pm':
+            # Iterate through desired APIs and call associated functions to retrieve data
+            for nodeMonitor in nodeMonitorList:
+                try:
                     apiDataName = f"{nodeMonitor['title']}_API_Data.json"
                     monitorDataName = f"{nodeMonitor['title']}_Monitor_Data.json"
                     # Populate initial values from node API call
@@ -81,8 +82,8 @@ def node_monitor(event, context):
                     send_Sms(message, nodeMonitor['comm_recipient'], nodeMonitor['comm_methods'])
                     # Save data into cloud storage
                     save_Data(monitorData, monitorDataName)
-    except e:
-        send_Sms()
+                except Exception as e:
+                    send_Sms("Bad news... An error occurred:{}\n\nTraceback: {}".format(str(e), traceback.print_exc(limit=2)))
 
 
 def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, startDate: dt.datetime) -> dict:
