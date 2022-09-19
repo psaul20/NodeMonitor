@@ -51,33 +51,38 @@ def node_monitor(event, context):
     print("This Function was triggered by messageId {} published at {} to {}"
           .format(context.event_id, context.timestamp, context.resource["name"]))
 
-    if 'data' in event:
-        timeTrigger = base64.b64decode(event['data']).decode('utf-8')
-        if timeTrigger == 'daily_5pm':
-            # Iterate through desired APIs and call associated functions to retrieve data
-            for nodeMonitor in nodeMonitorList:
-                apiDataName = f"{nodeMonitor['title']}_API_Data.json"
-                monitorDataName = f"{nodeMonitor['title']}_Monitor_Data.json"
-                # Populate initial values from node API call
-                monitorData = funcDict[nodeMonitor['token']](
-                    nodeMonitor['api_key'], apiDataName, monitorDataName, nodeMonitor['start_date'])
-                monitorData['timestamp_central_time'] = dt.datetime.now(
-                    tz=timezone('US/Central'))
+    try:
+        if 'data' in event:
+            timeTrigger = base64.b64decode(event['data']).decode('utf-8')
+            if timeTrigger == 'daily_5pm':
+                # Iterate through desired APIs and call associated functions to retrieve data
+                for nodeMonitor in nodeMonitorList:
+                    apiDataName = f"{nodeMonitor['title']}_API_Data.json"
+                    monitorDataName = f"{nodeMonitor['title']}_Monitor_Data.json"
+                    # Populate initial values from node API call
+                    monitorData = funcDict[nodeMonitor['token']](
+                        nodeMonitor['api_key'], apiDataName, monitorDataName, nodeMonitor['start_date'])
+                    monitorData['timestamp_central_time'] = dt.datetime.now(
+                        tz=timezone('US/Central'))
 
-                # Populate remaining values based on price information
-                tknPrice = get_Price(nodeMonitor['token'])
-                monitorData['current_token_price_USD'] = tknPrice
-                monitorData['tokens_earned_last_day_USD'] = tknPrice * \
-                    monitorData['tokens_earned_last_day']
-                monitorData['tokens_earned_this_month_USD'] = tknPrice * \
-                    monitorData['tokens_earned_this_month']
-                monitorData['tokens_earned_total_USD'] = tknPrice * \
-                    monitorData['tokens_earned_total']
+                    # Populate remaining values based on price information
+                    tknPrice = get_Price(nodeMonitor['token'])
+                    monitorData['current_token_price_USD'] = tknPrice
+                    monitorData['tokens_earned_last_day_USD'] = tknPrice * \
+                        monitorData['tokens_earned_last_day']
+                    monitorData['tokens_earned_this_month_USD'] = tknPrice * \
+                        monitorData['tokens_earned_this_month']
+                    monitorData['tokens_earned_total_USD'] = tknPrice * \
+                        monitorData['tokens_earned_total']
 
-                # Send data to message manager
-                send_Sms(nodeMonitor, monitorData, timeTrigger)
-                # Save data into cloud storage
-                save_Data(monitorData, monitorDataName)
+                    # Format data for message
+                    message = format_Data(nodeMonitor, monitorData, timeTrigger)
+                    # Send data to message manager
+                    send_Sms(message, nodeMonitor['comm_recipient'], nodeMonitor['comm_methods'])
+                    # Save data into cloud storage
+                    save_Data(monitorData, monitorDataName)
+    except e:
+        send_Sms()
 
 
 def get_PRE_Node_Data(apiKey: str, apiDataName: str, monitorDataName: str, startDate: dt.datetime) -> dict:
@@ -231,15 +236,9 @@ def check_Storage(fileName: str, hrLimit: float = 0.0):
         return False
 
 
-def send_Sms(nodeMonitor: dict, data: dict, timeTrigger: str):
-    project_id = os.getenv('GCP_PROJECT_ID')
-    topic_id = "send-sms"
-
-    publisher = pubsub.PublisherClient()
-    topic_path = publisher.topic_path(project_id, topic_id)
-
+def format_Data(nodeMonitor: dict, data: dict, timeTrigger: str):
     if timeTrigger == 'daily_5pm':
-        message = f"{nodeMonitor['owner']}'s {nodeMonitor['token']} Daily Update:" + \
+        string = f"{nodeMonitor['owner']}'s {nodeMonitor['token']} Daily Update:" + \
             f"\r\nNodes Online:             {str(data['nodes_online'])}/{str(data['nodes_total'])}" + \
             f"\r\nNode Requests:          {str(data['node_requests_last_day'])}" + \
             "\r\nPRE Price Today:        ${:.2f}".format(data['current_token_price_USD']) + \
@@ -250,12 +249,20 @@ def send_Sms(nodeMonitor: dict, data: dict, timeTrigger: str):
             "\r\nTotal {} Earned:       {:.2f}".format(nodeMonitor['token'], data['tokens_earned_total']) + \
             "\r\nTotal $ Earned:            ${:.2f}".format(data['tokens_earned_total_USD']) + \
             f"\r\nGo {nodeMonitor['token']} go!!"
+    return string
 
+
+def send_Sms(message: str, recipient: str, methods: list[str]):
+    project_id = os.getenv('GCP_PROJECT_ID')
+    topic_id = "send-sms"
+
+    publisher = pubsub.PublisherClient()
+    topic_path = publisher.topic_path(project_id, topic_id)
     # Data must be a bytestring
     messageData = json.dumps([{
         "message": message,
-        "comm_recipient": nodeMonitor['comm_recipient'],
-        "comm_methods": nodeMonitor['comm_methods']
+        "comm_recipient": recipient,
+        "comm_methods": methods
     }])
     messageData = messageData.encode('utf-8')
 
