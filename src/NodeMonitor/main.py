@@ -13,6 +13,7 @@ import google.oauth2.id_token
 import urllib3
 import certifi
 import traceback
+import time
 
 nodeMonitorList = [{
     'title': 'Patrick_PRE',
@@ -188,6 +189,7 @@ def save_Data(data, fileName):
 
 
 def call_PRE_API(apiKey: str, **apiFlags):
+    time.sleep(1)
     parameters = {
         'stats': 'true'
     }
