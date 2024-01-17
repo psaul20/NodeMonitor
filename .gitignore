@@ -12,3 +12,5 @@ messager_config.json
 scratch_work.py
 *.pyc
 src/SmsManager/.env.yaml
+src/CryptoPriceChecker/.env.yaml
+src/NodeMonitor/.env.yaml
