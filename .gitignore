@@ -11,3 +11,4 @@ testing_scripts.sh
 messager_config.json
 scratch_work.py
 *.pyc
+src/SmsManager/.env.yaml
