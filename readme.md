@@ -1,7 +1,7 @@
 # Node Monitor: Monitor Web3 Nodes and Associated Tokens
-This project was created to monitor the status of Web3 node staking operations, and the performance of their associated tokens.
+This project was created to monitor the status of Web3 node staking operations, and the performance of their associated tokens, by sending a daily summary message via telegram.
 
-If you are interested in forking or enhancing this repository, please feel free to reach out at patricksaul20@gmail.com
+If you are interested in building off of or enhancing this repository, please feel free to reach out at patricksaul20@gmail.com
 
 # Tech Stack
 
